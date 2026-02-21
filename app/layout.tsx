@@ -8,9 +8,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'B2B Wholesale Platform',
-  description: 'Enterprise wholesale ordering platform with competitive pricing',
-  generator: 'v0.app',
+  title: 'MobileGros — Accessoires Mobile en Gros',
+  description: 'Plateforme B2B de vente en gros d\'accessoires mobiles : coques, chargeurs, câbles, protections écran. Tarification dégressive pour revendeurs professionnels.',
+  generator: 'Next.js',
   icons: {
     icon: [
       {
@@ -32,8 +32,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#1a1a1a' },
+    { media: '(prefers-color-scheme: light)', color: '#f8f8fb' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a1a2e' },
   ],
   userScalable: false,
 }
@@ -44,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <body className="font-sans antialiased">
         <CartProvider>
           {children}
