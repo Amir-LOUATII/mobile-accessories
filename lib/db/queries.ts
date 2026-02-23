@@ -106,7 +106,7 @@ export async function getUserByEmail(email: string) {
 /**
  * Get all orders for a specific user with items.
  */
-export async function getOrdersByUserId(userId: number) {
+export async function getOrdersByUserId(userId: string) {
   return db.query.orders.findMany({
     where: eq(orders.userId, userId),
     with: {

@@ -8,6 +8,7 @@ import {
   Package,
   ShoppingCart,
   Users,
+  UserPlus,
   LogOut,
   X,
   PanelLeftClose,
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { label: "Produits", href: "/admin/products", icon: Package },
   { label: "Commandes", href: "/admin/orders", icon: ShoppingCart },
   { label: "Clients", href: "/admin/customers", icon: Users },
+  { label: "Vendeurs", href: "/admin/sellers", icon: UserPlus },
 ];
 
 interface AdminSidebarProps {
