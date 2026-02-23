@@ -73,8 +73,6 @@ export default function ProductsPage() {
             setSearchQuery={setSearchQuery}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
             activeFiltersCount={activeFiltersCount}
             resetFilters={resetFilters}
             categoryIcons={CATEGORY_ICONS}
@@ -104,6 +102,8 @@ export default function ProductsPage() {
                 categoryIcons={CATEGORY_ICONS}
                 activeFiltersCount={activeFiltersCount}
                 resetFilters={resetFilters}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
               />
 
               {/* ── Product Grid ── */}

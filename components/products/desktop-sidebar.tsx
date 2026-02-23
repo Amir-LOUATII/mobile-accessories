@@ -1,7 +1,7 @@
 "use client";
 
 import { MOCK_PRODUCTS, CATEGORIES } from "@/lib/mock-data";
-import { Search, X, ChevronDown } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface DesktopSidebarProps {
@@ -9,8 +9,6 @@ interface DesktopSidebarProps {
   setSearchQuery: (query: string) => void;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
-  sortBy: string;
-  setSortBy: (sort: string) => void;
   activeFiltersCount: number;
   resetFilters: () => void;
   categoryIcons: Record<string, string>;
@@ -21,8 +19,6 @@ export function DesktopSidebar({
   setSearchQuery,
   selectedCategory,
   setSelectedCategory,
-  sortBy,
-  setSortBy,
   activeFiltersCount,
   resetFilters,
   categoryIcons,
@@ -98,25 +94,6 @@ export function DesktopSidebar({
           </div>
         </div>
 
-        {/* Sort */}
-        <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">
-            Trier par
-          </label>
-          <div className="relative">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-border/60 rounded-xl bg-background text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-            >
-              <option value="relevance">Pertinence</option>
-              <option value="price-low">Prix croissant</option>
-              <option value="price-high">Prix décroissant</option>
-              <option value="name">Nom A-Z</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          </div>
-        </div>
 
         {/* Reset Filters */}
         {activeFiltersCount > 0 && (
