@@ -5,7 +5,7 @@ export default auth((req) => {
   const { nextUrl, auth: session } = req;
   const pathname = nextUrl.pathname;
 
-  // ── Admin routes ──
+  // ── Admin routes — admin only ──
   if (pathname.startsWith('/admin')) {
     if (!session?.user) {
       return NextResponse.redirect(new URL('/login', nextUrl));
@@ -15,7 +15,17 @@ export default auth((req) => {
     }
   }
 
-  // ── Seller routes ──
+  // ── Cart routes — sellers (and admins) only ──
+  if (pathname.startsWith('/cart')) {
+    if (!session?.user) {
+      return NextResponse.redirect(new URL('/login', nextUrl));
+    }
+    if (session.user.role !== 'seller' && session.user.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', nextUrl));
+    }
+  }
+
+  // ── Seller routes — sellers and admins ──
   if (pathname.startsWith('/seller')) {
     if (!session?.user) {
       return NextResponse.redirect(new URL('/login', nextUrl));
@@ -29,5 +39,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ['/admin/:path*', '/seller/:path*'],
+  matcher: ['/admin/:path*', '/seller/:path*', '/cart/:path*'],
 };

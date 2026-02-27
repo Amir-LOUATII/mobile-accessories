@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Plus,
   Minus,
   ShoppingCart,
   Check,
+  LogIn,
 } from "lucide-react";
 
 interface PurchaseControlsProps {
@@ -28,6 +30,10 @@ export function PurchaseControls({
   onAddToCart,
   totalPrice,
 }: PurchaseControlsProps) {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+  const canAddToCart = role === "seller" || role === "admin";
+
   const incrementQuantity = () => setQuantity(quantity + 1);
   const decrementQuantity = () => {
     if (quantity > minOrder) {
@@ -37,41 +43,43 @@ export function PurchaseControls({
 
   return (
     <div className="space-y-4 mt-8 pt-6 border-t border-border/50">
-      {/* Quantity */}
-      <div>
-        <label className="text-sm font-bold block mb-2">Quantité</label>
-        <div className="flex items-center border border-border/60 rounded-xl p-1.5 bg-secondary/30">
-          <button
-            onClick={decrementQuantity}
-            disabled={quantity === minOrder}
-            className="p-2.5 disabled:opacity-30 hover:bg-card rounded-lg transition-all"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-          <input
-            type="number"
-            value={quantity}
-            min={minOrder}
-            onChange={(e) => {
-              const val = Math.max(
-                minOrder,
-                parseInt(e.target.value) || minOrder
-              );
-              setQuantity(val);
-            }}
-            className="flex-1 text-center bg-transparent outline-none font-bold text-lg"
-          />
-          <button
-            onClick={incrementQuantity}
-            className="p-2.5 hover:bg-card rounded-lg transition-all"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
+      {/* Quantity — only for sellers / admins */}
+      {canAddToCart && (
+        <div>
+          <label className="text-sm font-bold block mb-2">Quantité</label>
+          <div className="flex items-center border border-border/60 rounded-xl p-1.5 bg-secondary/30">
+            <button
+              onClick={decrementQuantity}
+              disabled={quantity === minOrder}
+              className="p-2.5 disabled:opacity-30 hover:bg-card rounded-lg transition-all"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+            <input
+              type="number"
+              value={quantity}
+              min={minOrder}
+              onChange={(e) => {
+                const val = Math.max(
+                  minOrder,
+                  parseInt(e.target.value) || minOrder
+                );
+                setQuantity(val);
+              }}
+              className="flex-1 text-center bg-transparent outline-none font-bold text-lg"
+            />
+            <button
+              onClick={incrementQuantity}
+              className="p-2.5 hover:bg-card rounded-lg transition-all"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Commande minimale: {minOrder} unités
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Commande minimale: {minOrder} unités
-        </p>
-      </div>
+      )}
 
       {/* Stock indicator */}
       <div className="flex items-center gap-2">
@@ -93,32 +101,46 @@ export function PurchaseControls({
         )}
       </div>
 
-      {/* Buttons */}
-      <Button
-        onClick={onAddToCart}
-        size="lg"
-        className="w-full rounded-xl gap-2 text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
-        disabled={stock === 0}
-        variant={addedToCart ? "outline" : "default"}
-      >
-        {addedToCart ? (
-          <>
-            <Check className="w-5 h-5" />
-            Ajouté au panier !
-          </>
-        ) : (
-          <>
-            <ShoppingCart className="w-5 h-5" />
-            Ajouter au panier — {totalPrice.toFixed(2)}€
-          </>
-        )}
-      </Button>
+      {/* Buttons — or Login prompt */}
+      {canAddToCart ? (
+        <>
+          <Button
+            onClick={onAddToCart}
+            size="lg"
+            className="w-full rounded-xl gap-2 text-base shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
+            disabled={stock === 0}
+            variant={addedToCart ? "outline" : "default"}
+          >
+            {addedToCart ? (
+              <>
+                <Check className="w-5 h-5" />
+                Ajouté au panier !
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-5 h-5" />
+                Ajouter au panier — {totalPrice.toFixed(2)}€
+              </>
+            )}
+          </Button>
 
-      <Link href="/cart">
-        <Button variant="outline" className="w-full rounded-xl" size="lg">
-          Voir le panier
-        </Button>
-      </Link>
+          <Link href="/cart">
+            <Button variant="outline" className="w-full rounded-xl" size="lg">
+              Voir le panier
+            </Button>
+          </Link>
+        </>
+      ) : (
+        <Link href="/login">
+          <Button
+            size="lg"
+            className="w-full rounded-xl gap-2 text-base"
+          >
+            <LogIn className="w-5 h-5" />
+            Connectez-vous pour commander
+          </Button>
+        </Link>
+      )}
     </div>
   );
 }

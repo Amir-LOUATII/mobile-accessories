@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Product, FALLBACK_IMAGE } from '@/lib/mock-data';
 import { useCart } from '@/lib/cart-context';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
-import { Plus, Minus, ShoppingCart, Check, Package } from 'lucide-react';
+import { Plus, Minus, ShoppingCart, Check, LogIn } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -13,13 +15,18 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
+  const { data: session } = useSession();
   const [quantity, setQuantity] = useState(product.minOrder);
   const [showAddSuccess, setShowAddSuccess] = useState(false);
   const [imgError, setImgError] = useState(false);
 
+  const role = session?.user?.role;
+  const canAddToCart = role === 'seller' || role === 'admin';
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!canAddToCart) return;
     addItem(product.id, quantity);
     setShowAddSuccess(true);
     setTimeout(() => setShowAddSuccess(false), 2000);
@@ -109,38 +116,40 @@ export function ProductCard({ product }: ProductCardProps) {
           </p>
         </div>
 
-        {/* Quantity Selector */}
-        <div
-          className="flex items-center gap-1 border border-border/60 rounded-xl p-1.5 bg-secondary/30"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-        >
-          <button
-            onClick={decrementQuantity}
-            disabled={quantity === product.minOrder}
-            className="p-1.5 hover:bg-card rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </button>
-          <input
-            type="number"
-            value={quantity}
-            onChange={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const val = Math.max(product.minOrder, parseInt(e.target.value) || product.minOrder);
-              setQuantity(val);
-            }}
+        {/* Quantity Selector — only for sellers / admins */}
+        {canAddToCart && (
+          <div
+            className="flex items-center gap-1 border border-border/60 rounded-xl p-1.5 bg-secondary/30"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            className="flex-1 text-center bg-transparent font-bold text-sm focus:outline-none"
-            min={product.minOrder}
-          />
-          <button
-            onClick={incrementQuantity}
-            className="p-1.5 hover:bg-card rounded-lg transition-all duration-200"
           >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
-        </div>
+            <button
+              onClick={decrementQuantity}
+              disabled={quantity === product.minOrder}
+              className="p-1.5 hover:bg-card rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              <Minus className="w-3.5 h-3.5" />
+            </button>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const val = Math.max(product.minOrder, parseInt(e.target.value) || product.minOrder);
+                setQuantity(val);
+              }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              className="flex-1 text-center bg-transparent font-bold text-sm focus:outline-none"
+              min={product.minOrder}
+            />
+            <button
+              onClick={incrementQuantity}
+              className="p-1.5 hover:bg-card rounded-lg transition-all duration-200"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Stock Status */}
         <div className="flex items-center gap-1.5">
@@ -162,27 +171,39 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Add to Cart Button */}
-        <Button
-          onClick={handleAddToCart}
-          className="w-full rounded-xl gap-2 font-semibold transition-all duration-300"
-          disabled={product.stock === 0}
-          variant={showAddSuccess ? "outline" : "default"}
-        >
-          {showAddSuccess ? (
-            <>
-              <Check className="w-4 h-4" />
-              Ajouté !
-            </>
-          ) : product.stock === 0 ? (
-            'Indisponible'
-          ) : (
-            <>
-              <ShoppingCart className="w-4 h-4" />
-              Ajouter au panier
-            </>
-          )}
-        </Button>
+        {/* Add to Cart Button — or Login prompt */}
+        {canAddToCart ? (
+          <Button
+            onClick={handleAddToCart}
+            className="w-full rounded-xl gap-2 font-semibold transition-all duration-300"
+            disabled={product.stock === 0}
+            variant={showAddSuccess ? "outline" : "default"}
+          >
+            {showAddSuccess ? (
+              <>
+                <Check className="w-4 h-4" />
+                Ajouté !
+              </>
+            ) : product.stock === 0 ? (
+              'Indisponible'
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4" />
+                Ajouter au panier
+              </>
+            )}
+          </Button>
+        ) : (
+          <Link href="/login" className="w-full">
+            <Button
+              variant="outline"
+              className="w-full rounded-xl gap-2 font-semibold transition-all duration-300"
+            >
+              <LogIn className="w-4 h-4" />
+              Connectez-vous pour commander
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );
