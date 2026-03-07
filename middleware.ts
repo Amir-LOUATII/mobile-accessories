@@ -15,15 +15,7 @@ export default auth((req) => {
     }
   }
 
-  // ── Cart routes — sellers (and admins) only ──
-  if (pathname.startsWith('/cart')) {
-    if (!session?.user) {
-      return NextResponse.redirect(new URL('/login', nextUrl));
-    }
-    if (session.user.role !== 'seller' && session.user.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', nextUrl));
-    }
-  }
+
 
   // ── Seller routes — sellers and admins ──
   if (pathname.startsWith('/seller')) {
@@ -39,5 +31,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ['/admin/:path*', '/seller/:path*', '/cart/:path*'],
+  matcher: ['/admin/:path*', '/seller/:path*'],
 };
