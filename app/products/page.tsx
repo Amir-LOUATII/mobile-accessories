@@ -19,6 +19,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis
 } from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const CATEGORY_ICONS: Record<string, string> = {
   Tous: "📱",
@@ -200,9 +201,20 @@ export default function ProductsPage() {
 
               {/* ── Loading ── */}
               {isLoading && (
-                <div className="flex items-center justify-center py-20">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  <span className="ml-2 text-muted-foreground">Chargement des produits…</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8 mt-6">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="flex flex-col gap-4 bg-card border border-border/50 rounded-2xl p-4">
+                      <Skeleton className="w-full aspect-[4/3] rounded-xl" />
+                      <div className="space-y-3 mt-2">
+                        <Skeleton className="w-3/4 h-5" />
+                        <Skeleton className="w-1/2 h-4" />
+                      </div>
+                      <div className="flex gap-2 mt-auto pt-4">
+                         <Skeleton className="w-1/3 h-6" />
+                         <Skeleton className="w-1/4 h-6 ml-auto" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 

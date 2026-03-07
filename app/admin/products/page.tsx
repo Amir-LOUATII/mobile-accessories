@@ -17,6 +17,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis
 } from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DBProduct {
   id: number;
@@ -143,11 +144,39 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* ── Loading ── */}
+      {/* ── Loading Skeletons ── */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">Chargement…</span>
+        <div className="border border-border rounded-xl bg-card overflow-hidden">
+          <div className="bg-secondary/30 p-4 border-b border-border flex justify-between">
+            <Skeleton className="w-[100px] h-4" />
+            <Skeleton className="w-[150px] h-4 hidden sm:block" />
+            <Skeleton className="w-[100px] h-4 hidden md:block" />
+            <Skeleton className="w-[80px] h-4" />
+            <Skeleton className="w-[60px] h-4" />
+          </div>
+          <div className="p-4 space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-12 h-12 rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="w-[150px] h-4" />
+                    <Skeleton className="w-[100px] h-3" />
+                  </div>
+                </div>
+                <div className="hidden sm:block">
+                  <Skeleton className="w-[100px] h-4" />
+                </div>
+                <div className="hidden md:block">
+                  <Skeleton className="w-[60px] h-4" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="w-8 h-8 rounded-md" />
+                  <Skeleton className="w-8 h-8 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
