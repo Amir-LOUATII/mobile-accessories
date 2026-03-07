@@ -1,6 +1,5 @@
 "use client";
 
-import { MOCK_PRODUCTS, CATEGORIES } from "@/lib/mock-data";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -12,6 +11,8 @@ interface DesktopSidebarProps {
   activeFiltersCount: number;
   resetFilters: () => void;
   categoryIcons: Record<string, string>;
+  categories?: string[];
+  categoryCounts?: Record<string, number>;
 }
 
 export function DesktopSidebar({
@@ -22,6 +23,8 @@ export function DesktopSidebar({
   activeFiltersCount,
   resetFilters,
   categoryIcons,
+  categories = [],
+  categoryCounts = {},
 }: DesktopSidebarProps) {
   return (
     <aside className="hidden lg:block w-[280px] border-r border-border/50 bg-card/50 sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto">
@@ -57,11 +60,8 @@ export function DesktopSidebar({
             Catégories
           </label>
           <div className="space-y-1.5">
-            {CATEGORIES.map((category) => {
-              const count =
-                category === "Tous"
-                  ? MOCK_PRODUCTS.length
-                  : MOCK_PRODUCTS.filter((p) => p.category === category).length;
+            {categories.map((category) => {
+              const count = categoryCounts[category] ?? 0;
 
               return (
                 <button
@@ -93,7 +93,6 @@ export function DesktopSidebar({
             })}
           </div>
         </div>
-
 
         {/* Reset Filters */}
         {activeFiltersCount > 0 && (

@@ -6,6 +6,12 @@ import { useCart } from '@/lib/cart-context';
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
+import { CartPreview } from '@/components/cart/cart-preview';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
 
 const ROLE_LABELS: Record<string, { label: string; icon: typeof User; color: string }> = {
   admin: { label: 'Administrateur', icon: Shield, color: 'text-red-500 bg-red-500/10' },
@@ -22,8 +28,6 @@ export function Header() {
 
   const role = session?.user?.role;
   const isAdmin = role === 'admin';
-  const isSeller = role === 'seller';
-  const canAccessCart = isSeller || isAdmin;
   const isLoggedIn = status === 'authenticated';
 
   const userName = session?.user?.name || 'Utilisateur';
@@ -92,20 +96,42 @@ export function Header() {
 
           {/* Cart, Auth, and Mobile Menu */}
           <div className="flex items-center gap-2 md:gap-3">
-            {/* Cart — only for sellers and admins */}
-            {canAccessCart && (
+            {/* Cart — accessible to all */}
+            <div className="hidden md:block relative z-50">
+              <HoverCard openDelay={0} closeDelay={200}>
+                <HoverCardTrigger asChild>
+                  <Link
+                    href="/cart"
+                    className="relative flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-all duration-200"
+                  >
+                    <ShoppingCart className="w-5 h-5 text-foreground/70 transition-colors" />
+                    {itemCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-md animate-fade-in">
+                        {itemCount}
+                      </span>
+                    )}
+                  </Link>
+                </HoverCardTrigger>
+                <HoverCardContent align="end" sideOffset={8} className="w-80 p-0 rounded-2xl shadow-2xl shadow-black/10 border-border/60 overflow-hidden">
+                  <CartPreview />
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+
+            {/* Mobile (Fallback without hover card) */}
+            <div className="md:hidden">
               <Link
                 href="/cart"
-                className="relative flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-all duration-200 group"
+                className="relative flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-all duration-200"
               >
-                <ShoppingCart className="w-5 h-5 text-foreground/70 group-hover:text-primary transition-colors" />
+                <ShoppingCart className="w-5 h-5 text-foreground/70 transition-colors" />
                 {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-md animate-fade-in">
                     {itemCount}
                   </span>
                 )}
               </Link>
-            )}
+            </div>
 
             {/* ── Desktop: User Menu Dropdown ── */}
             <div className="hidden md:block relative" ref={userMenuRef}>
@@ -224,16 +250,14 @@ export function Header() {
             ))}
 
             {/* Mobile cart link */}
-            {canAccessCart && (
-              <Link
-                href="/cart"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-4 py-3 hover:bg-primary/5 rounded-xl text-sm font-medium transition-all duration-200"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                Panier {itemCount > 0 && `(${itemCount})`}
-              </Link>
-            )}
+            <Link
+              href="/cart"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-2 px-4 py-3 hover:bg-primary/5 rounded-xl text-sm font-medium transition-all duration-200"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              Panier {itemCount > 0 && `(${itemCount})`}
+            </Link>
 
             {/* Mobile auth */}
             <div className="border-t border-border/50 mt-2 pt-2">

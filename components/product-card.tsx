@@ -1,90 +1,35 @@
-'use client';
-
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Product, FALLBACK_IMAGE } from '@/lib/mock-data';
-import { useCart } from '@/lib/cart-context';
-import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { Plus, Minus, ShoppingCart, Check, LogIn } from 'lucide-react';
+import { Product } from "@/lib/mock-data";
+import { ProductCardImage } from "@/components/products/product-card-image";
+import { AddToCartButton } from "@/components/products/add-to-cart-button";
 
 interface ProductCardProps {
   product: Product;
 }
 
+const badgeColors: Record<string, string> = {
+  "Best-seller": "bg-accent text-accent-foreground",
+  Nouveau: "bg-primary text-primary-foreground",
+  Populaire: "bg-purple-500 text-white",
+  Volume: "bg-emerald-500 text-white",
+  Tendance: "bg-pink-500 text-white",
+  Pro: "bg-amber-500 text-white",
+};
+
 export function ProductCard({ product }: ProductCardProps) {
-  const { addItem } = useCart();
-  const { data: session } = useSession();
-  const [quantity, setQuantity] = useState(product.minOrder);
-  const [showAddSuccess, setShowAddSuccess] = useState(false);
-  const [imgError, setImgError] = useState(false);
-
-  const role = session?.user?.role;
-  const canAddToCart = role === 'seller' || role === 'admin';
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!canAddToCart) return;
-    addItem(product.id, quantity);
-    setShowAddSuccess(true);
-    setTimeout(() => setShowAddSuccess(false), 2000);
-  };
-
-  const incrementQuantity = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setQuantity(q => q + 1);
-  };
-
-  const decrementQuantity = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (quantity > product.minOrder) {
-      setQuantity(q => q - 1);
-    }
-  };
-
-  const badgeColors: Record<string, string> = {
-    'Best-seller': 'bg-accent text-accent-foreground',
-    'Nouveau': 'bg-primary text-primary-foreground',
-    'Populaire': 'bg-purple-500 text-white',
-    'Volume': 'bg-emerald-500 text-white',
-    'Tendance': 'bg-pink-500 text-white',
-    'Pro': 'bg-amber-500 text-white',
-  };
-
   return (
-    <div className={`group bg-card border border-border/60 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-500 flex flex-col h-full ${product.stock === 0 ? 'opacity-75' : ''}`}>
-      {/* Image Container */}
-      <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-secondary to-muted overflow-hidden">
-        <Image
-          src={imgError ? FALLBACK_IMAGE : product.image}
-          alt={product.name}
-          fill
-          className={`object-cover transition-all duration-500 ${product.stock === 0 ? 'opacity-30 grayscale' : 'group-hover:scale-110'}`}
-          onError={() => setImgError(true)}
-        />
+    <div
+      className={`group bg-card border border-border/60 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all duration-500 flex flex-col h-full ${
+        product.stock === 0 ? "opacity-75" : ""
+      }`}
+    >
+      <ProductCardImage
+        image={product.image}
+        name={product.name}
+        stock={product.stock}
+        badge={product.badge}
+        badgeColors={badgeColors}
+      />
 
-        {/* Badge */}
-        {product.badge && product.stock > 0 && (
-          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg ${badgeColors[product.badge] || 'bg-primary text-primary-foreground'}`}>
-            {product.badge}
-          </div>
-        )}
-
-        {/* Out of Stock Overlay */}
-        {product.stock === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/60 via-black/30 to-black/10">
-            <div className="bg-red-600/90 backdrop-blur-sm text-white px-5 py-2.5 rounded-xl shadow-lg text-center">
-              <div className="font-bold text-sm tracking-wide">Rupture de stock</div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
       <div className="flex flex-col flex-1 p-5 space-y-3">
         {/* Category */}
         <span className="text-[11px] font-semibold uppercase tracking-wider text-primary/70">
@@ -110,46 +55,10 @@ export function ProductCard({ product }: ProductCardProps) {
             <span className="text-[10px] text-muted-foreground">/unité</span>
           </div>
 
-          {/* Min order */}
           <p className="text-[11px] text-muted-foreground">
             Min. {product.minOrder} unités
           </p>
         </div>
-
-        {/* Quantity Selector — only for sellers / admins */}
-        {canAddToCart && (
-          <div
-            className="flex items-center gap-1 border border-border/60 rounded-xl p-1.5 bg-secondary/30"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          >
-            <button
-              onClick={decrementQuantity}
-              disabled={quantity === product.minOrder}
-              className="p-1.5 hover:bg-card rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              <Minus className="w-3.5 h-3.5" />
-            </button>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const val = Math.max(product.minOrder, parseInt(e.target.value) || product.minOrder);
-                setQuantity(val);
-              }}
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-              className="flex-1 text-center bg-transparent font-bold text-sm focus:outline-none"
-              min={product.minOrder}
-            />
-            <button
-              onClick={incrementQuantity}
-              className="p-1.5 hover:bg-card rounded-lg transition-all duration-200"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
 
         {/* Stock Status */}
         <div className="flex items-center gap-1.5">
@@ -171,39 +80,12 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Add to Cart Button — or Login prompt */}
-        {canAddToCart ? (
-          <Button
-            onClick={handleAddToCart}
-            className="w-full rounded-xl gap-2 font-semibold transition-all duration-300"
-            disabled={product.stock === 0}
-            variant={showAddSuccess ? "outline" : "default"}
-          >
-            {showAddSuccess ? (
-              <>
-                <Check className="w-4 h-4" />
-                Ajouté !
-              </>
-            ) : product.stock === 0 ? (
-              'Indisponible'
-            ) : (
-              <>
-                <ShoppingCart className="w-4 h-4" />
-                Ajouter au panier
-              </>
-            )}
-          </Button>
-        ) : (
-          <Link href="/login" className="w-full">
-            <Button
-              variant="outline"
-              className="w-full rounded-xl gap-2 font-semibold transition-all duration-300"
-            >
-              <LogIn className="w-4 h-4" />
-              Connectez-vous pour commander
-            </Button>
-          </Link>
-        )}
+        {/* Client Component: Interactivity */}
+        <AddToCartButton
+          productId={product.id}
+          minOrder={product.minOrder}
+          stock={product.stock}
+        />
       </div>
     </div>
   );

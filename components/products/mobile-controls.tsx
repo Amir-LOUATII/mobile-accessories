@@ -1,6 +1,5 @@
 "use client";
 
-import { CATEGORIES } from "@/lib/mock-data";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ interface MobileControlsProps {
   setShowMobileFilters: (show: boolean) => void;
   activeFiltersCount: number;
   categoryIcons: Record<string, string>;
+  categories?: string[];
 }
 
 export function MobileControls({
@@ -29,6 +29,7 @@ export function MobileControls({
   setShowMobileFilters,
   activeFiltersCount,
   categoryIcons,
+  categories = [],
 }: MobileControlsProps) {
   return (
     <div className="lg:hidden space-y-4 mb-6">
@@ -78,7 +79,7 @@ export function MobileControls({
       {/* Mobile Category Pills */}
       {showMobileFilters && (
         <div className="flex flex-wrap gap-2 animate-slide-up">
-          {CATEGORIES.map((category) => (
+          {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}

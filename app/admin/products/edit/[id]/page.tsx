@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
-import { getCategories, createProduct } from '@/app/actions/products';
+import { getCategories, getProduct, updateProduct } from '@/app/actions/products';
 
 interface Category {
   id: number;
@@ -14,9 +14,15 @@ interface Category {
   slug: string;
 }
 
-export default function AddProductPage() {
+export default function EditProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(true);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -29,25 +35,46 @@ export default function AddProductPage() {
     badge: '',
   });
 
-  const [wholesaleTiers, setWholesaleTiers] = useState([
-    { quantity: '', price: '' },
-  ]);
+  const [wholesaleTiers, setWholesaleTiers] = useState<{ quantity: string; price: string }[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Fetch categories
+  // Fetch categories + product
   useEffect(() => {
-    getCategories()
-      .then((data) => {
-        setCategories((data.categories as Category[]) || []);
-        if (data.categories?.length > 0 && !formData.categoryId) {
-          setFormData((prev) => ({ ...prev, categoryId: data.categories[0].id.toString() }));
+    Promise.all([
+      getCategories(),
+      getProduct(id),
+    ])
+      .then(([catData, prodData]) => {
+        setCategories((catData.categories as Category[]) || []);
+
+        if (prodData.product) {
+          const p = prodData.product;
+          setFormData({
+            name: p.name,
+            categoryId: p.categoryId.toString(),
+            description: p.description,
+            basePrice: p.basePrice,
+            minOrder: p.minOrder.toString(),
+            stock: p.stock.toString(),
+            image: p.image || '',
+            badge: p.badge || '',
+          });
+          setWholesaleTiers(
+            (p.wholesalePrices || []).map((wp: { quantity: number; price: string }) => ({
+              quantity: wp.quantity.toString(),
+              price: wp.price,
+            }))
+          );
+        } else {
+          setErrorMessage(prodData.error || 'Produit non trouvé');
         }
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => setErrorMessage('Erreur lors du chargement'))
+      .finally(() => setIsLoadingProduct(false));
+  }, [id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -81,7 +108,7 @@ export default function AddProductPage() {
     setErrorMessage('');
 
     try {
-      const res = await createProduct({
+      const res = await updateProduct(id, {
         ...formData,
         tiers: wholesaleTiers.filter((t) => t.quantity && t.price),
       });
@@ -100,6 +127,15 @@ export default function AddProductPage() {
     }
   };
 
+  if (isLoadingProduct) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Chargement du produit…</span>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto py-2">
       {/* Header */}
@@ -108,14 +144,14 @@ export default function AddProductPage() {
           <ArrowLeft className="w-4 h-4" />
           Retour aux Produits
         </Link>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Ajouter un Nouveau Produit</h1>
-        <p className="text-foreground/70">Remplissez les détails du nouveau produit en gros</p>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Modifier le Produit</h1>
+        <p className="text-foreground/70">Mettre à jour les informations du produit</p>
       </div>
 
       {/* Success */}
       {showSuccess && (
         <div className="mb-6 p-4 bg-green-100 border border-green-300 rounded-xl text-green-800 font-medium">
-          ✅ Produit créé avec succès ! Redirection…
+          ✅ Produit mis à jour avec succès ! Redirection…
         </div>
       )}
 
@@ -263,17 +299,15 @@ export default function AddProductPage() {
                   className="flex-1"
                   disabled={isSubmitting || showSuccess}
                 />
-                {wholesaleTiers.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => removeTier(index)}
-                    className="text-destructive"
-                    disabled={isSubmitting || showSuccess}
-                  >
-                    Supprimer
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => removeTier(index)}
+                  className="text-destructive"
+                  disabled={isSubmitting || showSuccess}
+                >
+                  Supprimer
+                </Button>
               </div>
             ))}
             <Button type="button" variant="outline" onClick={addTier} className="w-full" disabled={isSubmitting || showSuccess}>
@@ -305,12 +339,12 @@ export default function AddProductPage() {
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Création…
+                Mise à jour…
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                Créer le Produit
+                Enregistrer les Modifications
               </>
             )}
           </Button>

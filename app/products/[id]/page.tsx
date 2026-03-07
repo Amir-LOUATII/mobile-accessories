@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, useEffect, use } from "react";
 import { Header } from "@/components/header";
-import { MOCK_PRODUCTS, getWholesalePrice } from "@/lib/mock-data";
 import { useCart } from "@/lib/cart-context";
+import { Product, getWholesalePrice } from "@/lib/mock-data";
 import { ProductBreadcrumb } from "@/components/products/product-breadcrumb";
 import { ProductImage } from "@/components/products/product-image";
 import { ProductDetails } from "@/components/products/product-details";
@@ -11,6 +11,41 @@ import { PricingCard } from "@/components/products/pricing-card";
 import { WholesaleTiers } from "@/components/products/wholesale-tiers";
 import { PurchaseControls } from "@/components/products/purchase-controls";
 import { RelatedProducts } from "@/components/products/related-products";
+import { Loader2 } from "lucide-react";
+import { getProduct, getProducts } from "@/app/actions/products";
+
+interface DBProduct {
+  id: number;
+  name: string;
+  slug: string;
+  categoryId: number;
+  description: string;
+  image: string;
+  basePrice: string;
+  stock: number;
+  minOrder: number;
+  badge: string | null;
+  category: { id: number; name: string; slug: string };
+  wholesalePrices: { id: number; quantity: number; price: string }[];
+}
+
+function mapDBProduct(p: DBProduct): Product {
+  return {
+    id: p.id.toString(),
+    name: p.name,
+    category: p.category?.name || "—",
+    description: p.description,
+    image: p.image,
+    basePrice: parseFloat(p.basePrice),
+    wholesalePrices: (p.wholesalePrices || []).map((wp) => ({
+      quantity: wp.quantity,
+      price: parseFloat(wp.price),
+    })),
+    stock: p.stock,
+    minOrder: p.minOrder,
+    badge: p.badge || undefined,
+  };
+}
 
 export default function ProductDetailPage({
   params,
@@ -18,29 +53,71 @@ export default function ProductDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const foundProduct = MOCK_PRODUCTS.find((p) => p.id === id);
-
-  const product = foundProduct ?? {
-    id: "placeholder",
-    name: "Produit Démonstration",
-    description:
-      "Ceci est un produit temporaire utilisé pour prévisualiser le design. Les données finales seront mises à jour prochainement.",
-    image: "https://via.placeholder.com/800x800.png?text=Produit",
-    category: "Catégorie",
-    basePrice: 99,
-    minOrder: 1,
-    stock: 25,
-    wholesalePrices: [
-      { quantity: 1, price: 99 },
-      { quantity: 10, price: 89 },
-      { quantity: 50, price: 79 },
-    ],
-  };
-
   const { addItem } = useCart();
-  const [quantity, setQuantity] = useState(product.minOrder);
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+    setNotFound(false);
+
+    getProduct(id)
+      .then((data) => {
+        if (!data.product) {
+          setNotFound(true);
+          return;
+        }
+        const mapped = mapDBProduct(data.product as DBProduct);
+        setProduct(mapped);
+        setQuantity(mapped.minOrder);
+
+        // Fetch related products (same category)
+        getProducts({ category: mapped.category })
+          .then((relData) => {
+            const related = ((relData.products as DBProduct[]) || [])
+              .filter((p) => p.id.toString() !== id)
+              .slice(0, 3)
+              .map(mapDBProduct);
+            setRelatedProducts(related);
+          })
+          .catch(() => {});
+      })
+      .catch(() => setNotFound(true))
+      .finally(() => setIsLoading(false));
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Chargement…</span>
+        </main>
+      </>
+    );
+  }
+
+  if (notFound || !product) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-2">Produit non trouvé</h1>
+            <p className="text-muted-foreground">Ce produit n&apos;existe pas ou a été supprimé.</p>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   const currentPrice = getWholesalePrice(product, quantity);
   const savings = (
@@ -54,10 +131,6 @@ export default function ProductDetailPage({
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);
   };
-
-  const relatedProducts = MOCK_PRODUCTS.filter(
-    (p) => p.category === product.category && p.id !== product.id
-  ).slice(0, 3);
 
   return (
     <>
@@ -81,15 +154,13 @@ export default function ProductDetailPage({
             {/* ── Details Column ── */}
             <div className="flex flex-col">
               <div className="space-y-6 flex-1">
-                {/* ── Product Details ── */}
                 <ProductDetails
                   category={product.category}
                   name={product.name}
                   description={product.description}
-                  isPlaceholder={product.id === "placeholder"}
+                  isPlaceholder={false}
                 />
 
-                {/* ── Pricing Card ── */}
                 <PricingCard
                   currentPrice={currentPrice}
                   basePrice={product.basePrice}
@@ -98,7 +169,6 @@ export default function ProductDetailPage({
                   quantity={quantity}
                 />
 
-                {/* ── Wholesale Tiers ── */}
                 <WholesaleTiers
                   wholesalePrices={product.wholesalePrices}
                   basePrice={product.basePrice}
@@ -106,7 +176,6 @@ export default function ProductDetailPage({
                 />
               </div>
 
-              {/* ── Purchase Controls ── */}
               <PurchaseControls
                 quantity={quantity}
                 setQuantity={setQuantity}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Product } from "@/lib/mock-data";
 import { Edit2, Trash2 } from "lucide-react";
 
@@ -23,9 +24,12 @@ export function ProductsTable({ products, onDelete }: ProductsTableProps) {
                 </p>
               </div>
               <div className="flex gap-1 flex-shrink-0">
-                <button className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition">
+                <Link
+                  href={`/admin/products/edit/${product.id}`}
+                  className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition"
+                >
                   <Edit2 className="w-3.5 h-3.5" />
-                </button>
+                </Link>
                 <button
                   onClick={() => onDelete(product.id)}
                   className="p-1.5 text-destructive hover:bg-destructive/10 rounded-lg transition"
@@ -36,7 +40,7 @@ export function ProductsTable({ products, onDelete }: ProductsTableProps) {
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="font-semibold">
-                ${product.basePrice.toFixed(2)}
+                {product.basePrice.toFixed(2)}€
               </span>
               <span
                 className={
@@ -93,7 +97,7 @@ export function ProductsTable({ products, onDelete }: ProductsTableProps) {
                   {product.category}
                 </td>
                 <td className="px-4 lg:px-6 py-4 text-sm">
-                  ${product.basePrice.toFixed(2)}
+                  {product.basePrice.toFixed(2)}€
                 </td>
                 <td className="px-4 lg:px-6 py-4 text-sm">
                   <span
@@ -111,9 +115,12 @@ export function ProductsTable({ products, onDelete }: ProductsTableProps) {
                 </td>
                 <td className="px-4 lg:px-6 py-4">
                   <div className="flex gap-1.5">
-                    <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition">
+                    <Link
+                      href={`/admin/products/edit/${product.id}`}
+                      className="p-2 text-primary hover:bg-primary/10 rounded-lg transition"
+                    >
                       <Edit2 className="w-4 h-4" />
-                    </button>
+                    </Link>
                     <button
                       onClick={() => onDelete(product.id)}
                       className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition"

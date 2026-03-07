@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { CartItem } from "@/lib/mock-data";
 import {
@@ -28,7 +30,21 @@ export function OrderSummary({
   total,
   onClearCart,
 }: OrderSummaryProps) {
+  const { data: session } = useSession();
+  const router = useRouter();
+  
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
+  const role = session?.user?.role;
+  const canCheckout = role === "seller" || role === "admin";
+
+  const handleCheckout = () => {
+    if (!canCheckout) {
+      router.push("/login");
+      return;
+    }
+    // Proceed to actual checkout logic here in the future
+    alert("Commande validée !");
+  };
 
   return (
     <div className="lg:col-span-1">
@@ -64,6 +80,7 @@ export function OrderSummary({
 
         <div className="space-y-2.5">
           <Button
+            onClick={handleCheckout}
             className="w-full rounded-xl shadow-lg shadow-primary/25"
             size="lg"
           >
