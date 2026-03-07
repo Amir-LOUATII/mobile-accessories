@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Loader2 } from "lucide-react";
 import { MiniStats } from "@/components/admin/mini-stats";
 import { CustomersTable } from "@/components/admin/customers-table";
+import { formatPrice } from "@/lib/utils";
 
 interface Seller {
   id: string;
@@ -80,7 +81,7 @@ export default function AdminCustomersPage() {
     },
     {
       label: "Total Dépensé",
-      value: `$${customers.reduce((sum, c) => sum + c.totalSpent, 0).toLocaleString()}`,
+      value: formatPrice(customers.reduce((sum, c) => sum + c.totalSpent, 0)),
     },
   ];
 

@@ -1,6 +1,7 @@
 import { Product } from "@/lib/mock-data";
 import { ProductCardImage } from "@/components/products/product-card-image";
 import { AddToCartButton } from "@/components/products/add-to-cart-button";
+import { formatPrice } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -50,7 +51,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="space-y-1 pt-1">
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-extrabold text-foreground">
-              {product.basePrice.toFixed(2)}€
+              {formatPrice(product.basePrice)}
             </span>
             <span className="text-[10px] text-muted-foreground">/unité</span>
           </div>

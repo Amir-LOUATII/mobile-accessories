@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   Check,
 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface PurchaseControlsProps {
   quantity: number;
@@ -110,7 +111,7 @@ export function PurchaseControls({
           ) : (
             <>
               <ShoppingCart className="w-5 h-5" />
-              Ajouter au panier — {totalPrice.toFixed(2)}€
+              Ajouter au panier — {formatPrice(totalPrice)}
             </>
           )}
         </Button>

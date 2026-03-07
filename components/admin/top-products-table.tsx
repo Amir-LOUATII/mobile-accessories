@@ -1,4 +1,5 @@
 import { Product } from "@/lib/mock-data";
+import { formatPrice } from "@/lib/utils";
 
 interface TopProductsTableProps {
   products: Product[];
@@ -19,7 +20,7 @@ export function TopProductsTable({ products }: TopProductsTableProps) {
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>{product.category}</span>
               <span className="font-semibold text-foreground">
-                ${product.basePrice.toFixed(2)}
+                {formatPrice(product.basePrice)}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -62,7 +63,7 @@ export function TopProductsTable({ products }: TopProductsTableProps) {
                 </td>
                 <td className="px-4 md:px-6 py-4 text-sm">{product.stock}</td>
                 <td className="px-4 md:px-6 py-4 font-semibold text-sm">
-                  ${product.basePrice.toFixed(2)}
+                  {formatPrice(product.basePrice)}
                 </td>
               </tr>
             ))}

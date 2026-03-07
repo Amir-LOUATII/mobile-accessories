@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FALLBACK_IMAGE, Product } from "@/lib/mock-data";
+import { formatPrice } from "@/lib/utils";
 
 interface RelatedProductsProps {
   products: Product[];
@@ -49,7 +50,7 @@ function RelatedProductItem({ product }: { product: Product }) {
         </h3>
         <p className="text-xs text-muted-foreground mt-1">À partir de</p>
         <p className="text-base font-extrabold mt-0.5">
-          {product.basePrice.toFixed(2)}€
+          {formatPrice(product.basePrice)}
         </p>
       </div>
     </Link>

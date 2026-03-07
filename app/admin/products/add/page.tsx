@@ -215,7 +215,7 @@ export default function AddProductPage() {
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Prix de Base (€) *</label>
+              <label className="block text-sm font-medium mb-2">Prix de Base (TND) *</label>
               <Input
                 type="number"
                 name="basePrice"
@@ -256,7 +256,7 @@ export default function AddProductPage() {
                 />
                 <Input
                   type="number"
-                  placeholder="Prix (€)"
+                  placeholder="Prix (TND)"
                   value={tier.price}
                   onChange={(e) => handleTierChange(index, 'price', e.target.value)}
                   step="0.01"

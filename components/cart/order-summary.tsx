@@ -11,6 +11,7 @@ import {
   CheckCircle,
   Package,
 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface OrderSummaryProps {
   items: CartItem[];
@@ -70,7 +71,7 @@ export function OrderSummary({
           <div className="flex justify-between items-baseline">
             <span className="font-bold text-sm sm:text-base">Total HT</span>
             <span className="text-xl sm:text-2xl font-black">
-              {total.toFixed(2)}€
+              {formatPrice(total)}
             </span>
           </div>
           <p className="text-[11px] text-muted-foreground">

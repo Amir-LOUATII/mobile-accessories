@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
 import { MOCK_PRODUCTS, FALLBACK_IMAGE } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
+import { formatPrice } from "@/lib/utils";
 
 export function CartPreview() {
   const { items, total } = useCart();
@@ -61,7 +62,7 @@ export function CartPreview() {
                 <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
                   <span>Qté: {item.quantity}</span>
                   <span className="font-medium text-foreground">
-                    {(item.price * item.quantity).toFixed(2)}€
+                    {formatPrice(item.price * item.quantity)}
                   </span>
                 </div>
               </div>
@@ -83,7 +84,7 @@ export function CartPreview() {
             Total HT
           </span>
           <span className="text-lg font-black text-foreground">
-            {total.toFixed(2)}€
+            {formatPrice(total)}
           </span>
         </div>
         <Link href="/cart" className="block w-full">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Product } from "@/lib/mock-data";
 import { Edit2, Trash2 } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface ProductsTableProps {
   products: Product[];
@@ -40,7 +41,7 @@ export function ProductsTable({ products, onDelete }: ProductsTableProps) {
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="font-semibold">
-                {product.basePrice.toFixed(2)}€
+                {formatPrice(product.basePrice)}
               </span>
               <span
                 className={
@@ -97,7 +98,7 @@ export function ProductsTable({ products, onDelete }: ProductsTableProps) {
                   {product.category}
                 </td>
                 <td className="px-4 lg:px-6 py-4 text-sm">
-                  {product.basePrice.toFixed(2)}€
+                  {formatPrice(product.basePrice)}
                 </td>
                 <td className="px-4 lg:px-6 py-4 text-sm">
                   <span

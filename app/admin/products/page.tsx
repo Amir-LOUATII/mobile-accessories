@@ -7,6 +7,7 @@ import { Plus, RefreshCw, Loader2 } from "lucide-react";
 import { ProductsTable } from "@/components/admin/products-table";
 import { MiniStats } from "@/components/admin/mini-stats";
 import { getProducts, deleteProduct } from "@/app/actions/products";
+import { formatPrice } from "@/lib/utils";
 
 interface DBProduct {
   id: number;
@@ -68,8 +69,8 @@ export default function AdminProductsPage() {
       label: "Prix Moyen",
       value:
         products.length > 0
-          ? `${(products.reduce((sum, p) => sum + parseFloat(p.basePrice), 0) / products.length).toFixed(2)}€`
-          : "0€",
+          ? formatPrice(products.reduce((sum, p) => sum + parseFloat(p.basePrice), 0) / products.length)
+          : formatPrice(0),
     },
   ];
 

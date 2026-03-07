@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { FALLBACK_IMAGE } from "@/lib/mock-data";
 import { Trash2, Plus, Minus } from "lucide-react";
+import { formatPrice } from "@/lib/utils";
 
 interface CartItemCardProps {
   productId: string;
@@ -74,10 +75,10 @@ export function CartItemCard({
 
           <div className="text-right">
             <div className="font-black text-base sm:text-lg">
-              {(unitPrice * quantity).toFixed(2)}€
+              {formatPrice(unitPrice * quantity)}
             </div>
             <div className="text-[10px] sm:text-xs text-muted-foreground">
-              {unitPrice.toFixed(2)}€ /unité
+              {formatPrice(unitPrice)} /unité
             </div>
           </div>
         </div>

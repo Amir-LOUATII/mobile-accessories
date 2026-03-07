@@ -1,3 +1,5 @@
+import { formatPrice } from "@/lib/utils";
+
 interface PricingCardProps {
   currentPrice: number;
   basePrice: number;
@@ -17,11 +19,11 @@ export function PricingCard({
     <div className="bg-gradient-to-br from-card to-secondary/30 border border-border/50 rounded-2xl p-6 space-y-4">
       <div className="flex items-end gap-3">
         <span className="text-4xl font-extrabold">
-          {currentPrice.toFixed(2)}€
+          {formatPrice(currentPrice)}
         </span>
         {currentPrice < basePrice && (
           <span className="text-lg text-muted-foreground line-through mb-1">
-            {basePrice.toFixed(2)}€
+            {formatPrice(basePrice)}
           </span>
         )}
         <span className="text-muted-foreground text-sm mb-1">/unité</span>
@@ -36,7 +38,7 @@ export function PricingCard({
       <div className="text-sm text-muted-foreground">
         Total:{" "}
         <span className="font-bold text-foreground">
-          {totalPrice.toFixed(2)}€
+          {formatPrice(totalPrice)}
         </span>{" "}
         pour {quantity} unités
       </div>

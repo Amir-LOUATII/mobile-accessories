@@ -1,3 +1,5 @@
+import { formatPrice } from "@/lib/utils";
+
 interface WholesaleTier {
   quantity: number;
   price: number;
@@ -37,7 +39,7 @@ export function WholesaleTiers({
                 currentQuantity >= tier.quantity ? "text-primary" : ""
               }`}
             >
-              {tier.price.toFixed(2)}€
+              {formatPrice(tier.price)}
             </p>
             <p className="text-[10px] text-muted-foreground">
               -{(((basePrice - tier.price) / basePrice) * 100).toFixed(0)}%
