@@ -8,7 +8,7 @@ import {
   sessions,
   verificationTokens,
 } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: DrizzleAdapter(db, {
@@ -50,16 +50,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return session;
     },
-    async signIn({ user }) {
+    async signIn({ user, account, profile }) {
+      console.log("[Auth SignIn Attempt] user:", user);
+      
       // Only allow users that exist in the database (no self-registration)
-      if (!user.email) return false;
+      if (!user.email) {
+        console.log("[Auth SignIn] Denied: No email provided in user object");
+        return false;
+      }
 
+      console.log("[Auth SignIn] user email:", user.email);
+      
+      const cleanEmail = user.email.trim().toLowerCase();
+
+      // Check case-insensitive
       const existingUser = await db.query.users.findFirst({
-        where: eq(users.email, user.email),
+        where: eq(sql`lower(${users.email})`, cleanEmail),
       });
+
+      console.log("[Auth SignIn] existingUser found:", existingUser);
 
       // Deny sign-in if user doesn't exist (no self-registration)
       if (!existingUser) {
+        // Log what we have in DB to debug
+        const allUsers = await db.query.users.findMany({ columns: { email: true }});
+        console.log("[Auth SignIn] Denied: User not found in DB. Available emails:", allUsers.map(u => u.email));
         return false;
       }
 
