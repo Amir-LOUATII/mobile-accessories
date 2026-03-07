@@ -52,6 +52,8 @@ export function CartPreview() {
                   src={product.image || FALLBACK_IMAGE}
                   alt={product.name}
                   fill
+                  loading="lazy"
+                  sizes="48px"
                   className="object-cover"
                 />
               </div>

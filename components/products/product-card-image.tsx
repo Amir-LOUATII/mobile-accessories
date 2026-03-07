@@ -27,6 +27,8 @@ export function ProductCardImage({
         src={imgError ? FALLBACK_IMAGE : image}
         alt={name}
         fill
+        loading="lazy"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
         className={`object-cover transition-all duration-500 ${
           stock === 0 ? "opacity-30 grayscale" : "group-hover:scale-110"
         }`}

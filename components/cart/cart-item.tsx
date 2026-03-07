@@ -37,6 +37,8 @@ export function CartItemCard({
           src={imgError ? FALLBACK_IMAGE : image}
           alt={name}
           fill
+          loading="lazy"
+          sizes="(max-width: 640px) 80px, 112px"
           className="object-cover"
           onError={() => setImgError(true)}
         />

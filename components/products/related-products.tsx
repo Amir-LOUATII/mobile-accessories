@@ -40,6 +40,8 @@ function RelatedProductItem({ product }: { product: Product }) {
           src={imgError ? FALLBACK_IMAGE : product.image}
           alt={product.name}
           fill
+          loading="lazy"
+          sizes="80px"
           className="object-cover group-hover:scale-110 transition-transform duration-500"
           onError={() => setImgError(true)}
         />
