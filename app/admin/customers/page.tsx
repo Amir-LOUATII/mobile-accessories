@@ -7,6 +7,15 @@ import { Plus, RefreshCw, Loader2 } from "lucide-react";
 import { MiniStats } from "@/components/admin/mini-stats";
 import { CustomersTable } from "@/components/admin/customers-table";
 import { formatPrice } from "@/lib/utils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis
+} from "@/components/ui/pagination";
 
 interface Seller {
   id: string;
@@ -30,12 +39,15 @@ export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const fetchCustomers = async () => {
     setIsLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/sellers/list");
+      const res = await fetch(`/api/admin/sellers/list?page=${currentPage}&limit=10`);
       if (!res.ok) throw new Error("Erreur lors du chargement");
 
       const data = await res.json();
@@ -51,6 +63,11 @@ export default function AdminCustomersPage() {
         })
       );
       setCustomers(mapped);
+      
+      if (data.pagination) {
+        setTotalPages(data.pagination.totalPages);
+        setTotalItems(data.pagination.totalItems);
+      }
     } catch {
       setError("Impossible de charger les clients. Veuillez réessayer.");
     } finally {
@@ -60,10 +77,10 @@ export default function AdminCustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [currentPage]);
 
   const miniStats = [
-    { label: "Clients Totaux", value: customers.length },
+    { label: "Clients Totaux", value: totalItems },
     {
       label: "Clients Actifs",
       value: customers.filter((c) => c.status === "Actif").length,
@@ -146,7 +163,61 @@ export default function AdminCustomersPage() {
 
       {/* ── Customers Table ── */}
       {!isLoading && customers.length > 0 && (
-        <CustomersTable customers={customers} />
+        <>
+          <CustomersTable customers={customers} />
+          {totalPages > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); if (currentPage > 1) setCurrentPage(p => p - 1); }} 
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={i}>
+                          <PaginationLink 
+                            href="#" 
+                            isActive={currentPage === page}
+                            onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (
+                      page === currentPage - 2 || 
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <PaginationItem key={i}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  })}
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) setCurrentPage(p => p + 1); }} 
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

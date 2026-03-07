@@ -33,10 +33,14 @@ export async function getProducts({
   category,
   search,
   sort,
+  page = 1,
+  limit,
 }: {
   category?: string;
   search?: string;
   sort?: string;
+  page?: number;
+  limit?: number;
 } = {}) {
   try {
     const conditions = [];
@@ -69,8 +73,19 @@ export async function getProducts({
         orderByClause = [desc(products.createdAt)];
     }
 
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Get total count for pagination
+    const totalCountQuery = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(products)
+      .where(whereClause);
+    const totalCount = Number(totalCountQuery[0].count);
+
+    const offset = limit ? (page - 1) * limit : 0;
+
     const results = await db.query.products.findMany({
-      where: conditions.length > 0 ? and(...conditions) : undefined,
+      where: whereClause,
       with: {
         category: true,
         wholesalePrices: {
@@ -78,9 +93,18 @@ export async function getProducts({
         },
       },
       orderBy: orderByClause,
+      ...(limit ? { limit, offset } : {}),
     });
 
-    return { products: results };
+    return { 
+      products: results,
+      pagination: {
+        totalItems: totalCount,
+        totalPages: limit ? Math.ceil(totalCount / limit) : 1,
+        currentPage: page,
+        limit: limit || totalCount
+      }
+    };
   } catch (error) {
     console.error("Error fetching products:", error);
     return { error: "Failed to fetch products" };

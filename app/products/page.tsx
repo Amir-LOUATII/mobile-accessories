@@ -10,6 +10,15 @@ import { ProductGrid } from "@/components/products/product-grid";
 import { Loader2 } from "lucide-react";
 import { Product } from "@/lib/mock-data";
 import { getProducts, getCategories } from "@/app/actions/products";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis
+} from "@/components/ui/pagination";
 
 const CATEGORY_ICONS: Record<string, string> = {
   Tous: "📱",
@@ -49,27 +58,45 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const [dbProducts, setDbProducts] = useState<DBProduct[]>([]);
   const [dbCategories, setDbCategories] = useState<DBCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery, sortBy]);
 
   // Fetch products
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
       const [prodData, catData] = await Promise.all([
-        getProducts(),
+        getProducts({
+          category: selectedCategory,
+          search: searchQuery,
+          sort: sortBy,
+          page: currentPage,
+          limit: 12,
+        }),
         getCategories(),
       ]);
       setDbProducts((prodData.products as DBProduct[]) || []);
+      if (prodData.pagination) {
+        setTotalPages(prodData.pagination.totalPages);
+        setTotalItems(prodData.pagination.totalItems);
+      }
       setDbCategories((catData.categories as DBCategory[]) || []);
     } catch {
       // fall through
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedCategory, searchQuery, sortBy, currentPage]);
 
   useEffect(() => {
     fetchProducts();
@@ -103,34 +130,12 @@ export default function ProductsPage() {
 
   // Category-to-count mapping
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { Tous: products.length };
+    const counts: Record<string, number> = { Tous: totalItems };
     for (const cat of dbCategories) {
       counts[cat.name] = cat.productCount;
     }
     return counts;
-  }, [dbCategories, products]);
-
-  // Filter & sort
-  const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products.filter((product) => {
-      const matchesCategory =
-        selectedCategory === "Tous" || product.category === selectedCategory;
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-
-    if (sortBy === "price-low") {
-      filtered.sort((a, b) => a.basePrice - b.basePrice);
-    } else if (sortBy === "price-high") {
-      filtered.sort((a, b) => b.basePrice - a.basePrice);
-    } else if (sortBy === "name") {
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return filtered;
-  }, [selectedCategory, searchQuery, sortBy, products]);
+  }, [dbCategories, totalItems]);
 
   const activeFiltersCount =
     (selectedCategory !== "Tous" ? 1 : 0) +
@@ -184,7 +189,7 @@ export default function ProductsPage() {
 
               {/* ── Results Header ── */}
               <ResultsHeader
-                filteredCount={filteredAndSortedProducts.length}
+                filteredCount={totalItems}
                 selectedCategory={selectedCategory}
                 categoryIcons={CATEGORY_ICONS}
                 activeFiltersCount={activeFiltersCount}
@@ -203,10 +208,64 @@ export default function ProductsPage() {
 
               {/* ── Product Grid ── */}
               {!isLoading && (
-                <ProductGrid
-                  products={filteredAndSortedProducts}
-                  resetFilters={resetFilters}
-                />
+                <>
+                  <ProductGrid
+                    products={products}
+                    resetFilters={resetFilters}
+                  />
+                  {totalPages > 1 && (
+                    <div className="mt-8">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              href="#" 
+                              onClick={(e) => { e.preventDefault(); if (currentPage > 1) setCurrentPage(p => p - 1); }} 
+                              className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                            />
+                          </PaginationItem>
+                          {[...Array(totalPages)].map((_, i) => {
+                            const page = i + 1;
+                            if (
+                              page === 1 || 
+                              page === totalPages || 
+                              (page >= currentPage - 1 && page <= currentPage + 1)
+                            ) {
+                              return (
+                                <PaginationItem key={i}>
+                                  <PaginationLink 
+                                    href="#" 
+                                    isActive={currentPage === page}
+                                    onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
+                                  >
+                                    {page}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            } else if (
+                              page === currentPage - 2 || 
+                              page === currentPage + 2
+                            ) {
+                              return (
+                                <PaginationItem key={i}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
+                            return null;
+                          })}
+                          <PaginationItem>
+                            <PaginationNext 
+                              href="#" 
+                              onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) setCurrentPage(p => p + 1); }} 
+                              className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </section>

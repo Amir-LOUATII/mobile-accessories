@@ -1,7 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { MiniStats } from "@/components/admin/mini-stats";
 import { OrdersTable } from "@/components/admin/orders-table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis
+} from "@/components/ui/pagination";
 
 const ORDERS = [
   {
@@ -52,6 +62,14 @@ const ORDERS = [
 ];
 
 export default function AdminOrdersPage() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 10;
+  
+  const totalItems = ORDERS.length;
+  const totalPages = Math.ceil(totalItems / limit) || 1;
+  const startIndex = (currentPage - 1) * limit;
+  const paginatedOrders = ORDERS.slice(startIndex, startIndex + limit);
+
   const miniStats = [
     { label: "Commandes Totales", value: ORDERS.length },
     {
@@ -81,7 +99,60 @@ export default function AdminOrdersPage() {
       <MiniStats stats={miniStats} columns={4} />
 
       {/* ── Orders Table ── */}
-      <OrdersTable orders={ORDERS} />
+      <OrdersTable orders={paginatedOrders} />
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  href="#" 
+                  onClick={(e) => { e.preventDefault(); if (currentPage > 1) setCurrentPage(p => p - 1); }} 
+                  className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              {[...Array(totalPages)].map((_, i) => {
+                const page = i + 1;
+                if (
+                  page === 1 || 
+                  page === totalPages || 
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <PaginationItem key={i}>
+                      <PaginationLink 
+                        href="#" 
+                        isActive={currentPage === page}
+                        onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                } else if (
+                  page === currentPage - 2 || 
+                  page === currentPage + 2
+                ) {
+                  return (
+                    <PaginationItem key={i}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  );
+                }
+                return null;
+              })}
+              <PaginationItem>
+                <PaginationNext 
+                  href="#" 
+                  onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) setCurrentPage(p => p + 1); }} 
+                  className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 }

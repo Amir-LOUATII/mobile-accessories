@@ -8,6 +8,15 @@ import { ProductsTable } from "@/components/admin/products-table";
 import { MiniStats } from "@/components/admin/mini-stats";
 import { getProducts, deleteProduct } from "@/app/actions/products";
 import { formatPrice } from "@/lib/utils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis
+} from "@/components/ui/pagination";
 
 interface DBProduct {
   id: number;
@@ -28,20 +37,27 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
-      const res = await getProducts();
+      const res = await getProducts({ page: currentPage, limit: 10 });
       if (res.error) throw new Error(res.error);
       setProducts((res.products as DBProduct[]) || []);
+      if (res.pagination) {
+        setTotalPages(res.pagination.totalPages);
+        setTotalItems(res.pagination.totalItems);
+      }
     } catch {
       setError("Impossible de charger les produits.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     fetchProducts();
@@ -59,14 +75,14 @@ export default function AdminProductsPage() {
   };
 
   const miniStats = [
-    { label: "Produits Totaux", value: products.length },
+    { label: "Produits Totaux", value: totalItems },
     {
       label: "Faible Stock",
       value: products.filter((p) => p.stock < 100).length,
       color: "text-amber-600",
     },
     {
-      label: "Prix Moyen",
+      label: "Prix Moyen (Page)",
       value:
         products.length > 0
           ? formatPrice(products.reduce((sum, p) => sum + parseFloat(p.basePrice), 0) / products.length)
@@ -150,7 +166,61 @@ export default function AdminProductsPage() {
 
       {/* ── Products Table ── */}
       {!isLoading && tableProducts.length > 0 && (
-        <ProductsTable products={tableProducts} onDelete={handleDelete} />
+        <>
+          <ProductsTable products={tableProducts} onDelete={handleDelete} />
+          {totalPages > 1 && (
+            <div className="mt-8 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); if (currentPage > 1) setCurrentPage(p => p - 1); }} 
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  {[...Array(totalPages)].map((_, i) => {
+                    const page = i + 1;
+                    if (
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={i}>
+                          <PaginationLink 
+                            href="#" 
+                            isActive={currentPage === page}
+                            onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (
+                      page === currentPage - 2 || 
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <PaginationItem key={i}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  })}
+                  <PaginationItem>
+                    <PaginationNext 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) setCurrentPage(p => p + 1); }} 
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
