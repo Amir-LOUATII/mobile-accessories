@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -10,8 +11,11 @@ import {
   Shield,
   CheckCircle,
   Package,
+  Loader2,
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { createOrder } from "@/app/actions/orders";
+import { toast } from "sonner";
 
 interface OrderSummaryProps {
   items: CartItem[];
@@ -33,18 +37,45 @@ export function OrderSummary({
 }: OrderSummaryProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const totalUnits = items.reduce((sum, item) => sum + item.quantity, 0);
   const role = session?.user?.role;
   const canCheckout = role === "seller" || role === "admin";
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!canCheckout) {
       router.push("/login");
       return;
     }
-    // Proceed to actual checkout logic here in the future
-    alert("Commande validée !");
+
+    if (items.length === 0) {
+      toast.error("Votre panier est vide");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const itemsPayload = items.map(i => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        price: i.price,
+      }));
+
+      const res = await createOrder({ items: itemsPayload, total });
+      
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        onClearCart();
+        toast.success("Commande validée avec succès !");
+        router.push("/checkout/success");
+      }
+    } catch (err) {
+      toast.error("Erreur serveur lors de la validation");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -82,10 +113,18 @@ export function OrderSummary({
         <div className="space-y-2.5">
           <Button
             onClick={handleCheckout}
-            className="w-full rounded-xl shadow-lg shadow-primary/25"
+            disabled={isSubmitting || items.length === 0}
+            className="w-full rounded-xl shadow-lg shadow-primary/25 gap-2"
             size="lg"
           >
-            Passer la commande
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Validation...
+              </>
+            ) : (
+              "Passer la commande"
+            )}
           </Button>
           <Link href="/products">
             <Button variant="outline" className="w-full rounded-xl">

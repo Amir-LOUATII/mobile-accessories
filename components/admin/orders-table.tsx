@@ -1,3 +1,7 @@
+import Link from "next/link";
+import { Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 interface OrderItem {
   id: string;
   customer: string;
@@ -56,7 +60,14 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                 </p>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">{order.date}</p>
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+              <p className="text-xs text-muted-foreground">{order.date}</p>
+              <Link href={`/admin/orders/${order.id}`}>
+                <Button variant="outline" size="sm" className="gap-2 h-7 rounded-lg">
+                  <Eye className="w-3.5 h-3.5" /> Détails
+                </Button>
+              </Link>
+            </div>
           </div>
         ))}
       </div>
@@ -83,6 +94,9 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               </th>
               <th className="text-left px-4 md:px-6 py-3 font-semibold text-sm">
                 Date
+              </th>
+              <th className="text-right px-4 md:px-6 py-3 font-semibold text-sm">
+                Actions
               </th>
             </tr>
           </thead>
@@ -114,6 +128,13 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                 </td>
                 <td className="px-4 md:px-6 py-4 text-sm text-foreground/70">
                   {order.date}
+                </td>
+                <td className="px-4 md:px-6 py-4 text-right">
+                  <Link href={`/admin/orders/${order.id}`}>
+                    <Button variant="ghost" size="icon" title="Voir les détails">
+                      <Eye className="w-4 h-4 text-primary" />
+                    </Button>
+                  </Link>
                 </td>
               </tr>
             ))}
