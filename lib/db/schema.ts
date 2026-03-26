@@ -34,6 +34,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   emailVerified: timestamp('email_verified', { mode: 'date' }),
   image: text('image'),
+  phone: varchar('phone', { length: 50 }),
   company: varchar('company', { length: 255 }),
   role: userRoleEnum('role').notNull().default('customer'),
   isActive: boolean('is_active').notNull().default(true),

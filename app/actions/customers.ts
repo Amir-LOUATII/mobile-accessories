@@ -40,6 +40,7 @@ export async function updateCustomer(
     name?: string;
     email?: string;
     company?: string;
+    phone?: string;
     isActive?: boolean;
   }
 ) {

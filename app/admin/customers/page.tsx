@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, RefreshCw, Loader2, Search } from "lucide-react";
 import { MiniStats } from "@/components/admin/mini-stats";
 import { CustomersTable } from "@/components/admin/customers-table";
 import { formatPrice } from "@/lib/utils";
@@ -22,6 +30,7 @@ interface Seller {
   name: string | null;
   email: string;
   company: string | null;
+  isActive: boolean;
   createdAt: string;
 }
 
@@ -33,12 +42,15 @@ interface CustomerRow {
   orders: number;
   totalSpent: number;
   status: string;
+  isActive: boolean;
 }
 
 export default function AdminCustomersPage() {
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -47,7 +59,7 @@ export default function AdminCustomersPage() {
     setIsLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/admin/sellers/list?page=${currentPage}&limit=10`);
+      const res = await fetch(`/api/admin/sellers/list?page=${currentPage}&limit=10&search=${encodeURIComponent(searchQuery)}&status=${statusFilter}`);
       if (!res.ok) throw new Error("Erreur lors du chargement");
 
       const data = await res.json();
@@ -59,7 +71,8 @@ export default function AdminCustomersPage() {
           email: seller.email,
           orders: 0,
           totalSpent: 0,
-          status: "Actif",
+          status: seller.isActive ? "Actif" : "Inactif",
+          isActive: seller.isActive,
         })
       );
       setCustomers(mapped);
@@ -76,8 +89,22 @@ export default function AdminCustomersPage() {
   };
 
   useEffect(() => {
-    fetchCustomers();
-  }, [currentPage]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchCustomers();
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, searchQuery, statusFilter]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
 
   const miniStats = [
     { label: "Clients Totaux", value: totalItems },
@@ -109,22 +136,48 @@ export default function AdminCustomersPage() {
         <h1 className="text-2xl sm:text-3xl font-bold">
           Gestion des Clients / Revendeurs
         </h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="gap-2 rounded-xl"
-            onClick={fetchCustomers}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Actualiser</span>
-          </Button>
-          <Link href="/admin/customers/add">
-            <Button className="gap-2 rounded-xl w-full sm:w-auto">
-              <Plus className="w-4 h-4" />
-              Ajouter Client
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-56">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Rechercher..."
+                className="pl-9 bg-card border-border rounded-xl"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </div>
+            <div className="w-32 sm:w-40">
+              <Select value={statusFilter} onValueChange={handleStatusChange}>
+                <SelectTrigger className="bg-card rounded-xl">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="active">Actif</SelectItem>
+                  <SelectItem value="inactive">Inactif</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2 rounded-xl"
+              onClick={fetchCustomers}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Actualiser</span>
             </Button>
-          </Link>
+            <Link href="/admin/customers/add">
+              <Button className="gap-2 rounded-xl w-full sm:w-auto">
+                <Plus className="w-4 h-4" />
+                Ajouter Client
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -164,7 +217,7 @@ export default function AdminCustomersPage() {
       {/* ── Customers Table ── */}
       {!isLoading && customers.length > 0 && (
         <>
-          <CustomersTable customers={customers} />
+          <CustomersTable customers={customers} onUpdate={fetchCustomers} />
           {totalPages > 1 && (
             <div className="mt-8 flex justify-center">
               <Pagination>

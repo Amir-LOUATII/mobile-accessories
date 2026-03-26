@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { email, name, company } = body;
+  const { email, name, company, phone } = body;
 
   if (!email || !name) {
     return NextResponse.json(
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       email,
       name,
       company: company || null,
+      phone: phone || null,
       role: 'seller',
     })
     .returning();
@@ -92,6 +93,7 @@ export async function POST(request: Request) {
       name: newUser.name,
       email: newUser.email,
       company: newUser.company,
+      phone: newUser.phone,
       role: newUser.role,
     },
   });

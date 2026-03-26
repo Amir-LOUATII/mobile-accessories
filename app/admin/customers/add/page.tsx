@@ -56,6 +56,7 @@ export default function AddCustomerPage() {
           name: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
           company: formData.company || undefined,
+          phone: formData.phone || undefined,
         }),
       });
 
