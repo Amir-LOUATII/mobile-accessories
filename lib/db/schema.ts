@@ -8,6 +8,7 @@ import {
   pgEnum,
   serial,
   primaryKey,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import type { AdapterAccountType } from 'next-auth/adapters';
@@ -35,6 +36,7 @@ export const users = pgTable('users', {
   image: text('image'),
   company: varchar('company', { length: 255 }),
   role: userRoleEnum('role').notNull().default('customer'),
+  isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

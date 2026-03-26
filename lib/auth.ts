@@ -78,6 +78,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return false;
       }
 
+      // Deny sign-in if user account is deactivated
+      if (existingUser.isActive === false) {
+        console.log("[Auth SignIn] Denied: User account is deactivated.");
+        return false;
+      }
+
       return true;
     },
   },
