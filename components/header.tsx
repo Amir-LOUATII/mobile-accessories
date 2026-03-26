@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Menu, X, Smartphone, LogIn, LogOut, User, Shield, Store, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Menu, X, Smartphone, LogIn, LogOut, User, Shield, Store, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
@@ -176,7 +176,15 @@ export function Header() {
                       </div>
 
                       {/* Menu Items */}
-                      <div className="p-2">
+                      <div className="p-2 space-y-1">
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-secondary/80 transition-all duration-200"
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                          Mon Espace
+                        </Link>
                         <button
                           onClick={() => {
                             setUserMenuOpen(false);
@@ -262,9 +270,18 @@ export function Header() {
             {/* Mobile auth */}
             <div className="border-t border-border/50 mt-2 pt-2">
               {isLoggedIn ? (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-3 hover:bg-primary/5 rounded-xl text-sm font-medium transition-all duration-200"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Mon Espace
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
                     signOut({ callbackUrl: '/' });
                   }}
                   className="flex items-center gap-2 w-full px-4 py-3 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl text-sm font-medium text-red-600 transition-all duration-200 text-left"
@@ -272,6 +289,7 @@ export function Header() {
                   <LogOut className="w-4 h-4" />
                   Se déconnecter
                 </button>
+                </>
               ) : (
                 <Link
                   href="/login"

@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Header } from "@/components/header";
 
 export default function CheckoutSuccessPage() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <>
+      <Header />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center space-y-6 shadow-sm">
         <div className="flex justify-center">
           <CheckCircle2 className="w-20 h-20 text-emerald-500" />
@@ -36,5 +39,6 @@ export default function CheckoutSuccessPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

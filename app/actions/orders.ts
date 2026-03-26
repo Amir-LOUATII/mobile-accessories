@@ -222,3 +222,34 @@ export async function updateOrderStatus(orderId: number, status: string) {
     return { error: "Erreur lors de la mise à jour du statut" };
   }
 }
+
+export async function getUserOrders() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { error: "Non autorisé" };
+    }
+
+    const userOrders = await db.query.orders.findMany({
+      where: eq(orders.userId, session.user.id),
+      with: {
+        items: {
+          with: {
+            product: {
+              columns: {
+                name: true,
+                image: true,
+              }
+            }
+          }
+        }
+      },
+      orderBy: [desc(orders.createdAt)],
+    });
+
+    return { orders: userOrders };
+  } catch (error: any) {
+    console.error("Erreur getUserOrders:", error);
+    return { error: "Erreur lors de la récupération de vos commandes" };
+  }
+}
