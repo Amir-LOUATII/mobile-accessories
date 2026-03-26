@@ -3,10 +3,18 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, RefreshCw, Loader2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ProductsTable } from "@/components/admin/products-table";
 import { MiniStats } from "@/components/admin/mini-stats";
-import { getProducts, deleteProduct } from "@/app/actions/products";
+import { getProducts, deleteProduct, getCategories } from "@/app/actions/products";
 import { formatPrice } from "@/lib/utils";
 import {
   Pagination,
@@ -38,15 +46,35 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("Tous");
+  const [sortBy, setSortBy] = useState("relevance");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+
+  useEffect(() => {
+    async function loadCategories() {
+      const res = await getCategories();
+      if (res.categories) {
+        setCategories(res.categories);
+      }
+    }
+    loadCategories();
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
-      const res = await getProducts({ page: currentPage, limit: 10 });
+      const res = await getProducts({
+        page: currentPage,
+        limit: 10,
+        search: searchQuery,
+        category: selectedCategory,
+        sort: sortBy,
+      });
       if (res.error) throw new Error(res.error);
       setProducts((res.products as DBProduct[]) || []);
       if (res.pagination) {
@@ -58,11 +86,30 @@ export default function AdminProductsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage]);
+  }, [currentPage, searchQuery, selectedCategory, sortBy]);
 
   useEffect(() => {
-    fetchProducts();
+    const delayDebounceFn = setTimeout(() => {
+      fetchProducts();
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
   }, [fetchProducts]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryChange = (val: string) => {
+    setSelectedCategory(val);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (val: string) => {
+    setSortBy(val);
+    setCurrentPage(1);
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer ce produit ?")) return;
@@ -111,26 +158,68 @@ export default function AdminProductsPage() {
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-3xl font-bold">
           Gestion des Produits
         </h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="gap-2 rounded-xl"
-            onClick={fetchProducts}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">Actualiser</span>
-          </Button>
-          <Link href="/admin/products/add">
-            <Button className="gap-2 rounded-xl w-full sm:w-auto">
-              <Plus className="w-4 h-4" />
-              Ajouter Produit
+        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-56">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Rechercher..."
+                className="pl-9 bg-card border-border rounded-xl"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </div>
+            <div className="w-32 sm:w-40">
+              <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+                <SelectTrigger className="bg-card rounded-xl">
+                  <SelectValue placeholder="Catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tous">Toutes Catégories</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-32 sm:w-40">
+              <Select value={sortBy} onValueChange={handleSortChange}>
+                <SelectTrigger className="bg-card rounded-xl">
+                  <SelectValue placeholder="Trier par" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="relevance">Pertinence</SelectItem>
+                  <SelectItem value="price_asc">Prix croissant</SelectItem>
+                  <SelectItem value="price_desc">Prix décroissant</SelectItem>
+                  <SelectItem value="newest">Plus récent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2 rounded-xl"
+              onClick={fetchProducts}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Actualiser</span>
             </Button>
-          </Link>
+            <Link href="/admin/products/add">
+              <Button className="gap-2 rounded-xl w-full sm:w-auto">
+                <Plus className="w-4 h-4" />
+                Ajouter Produit
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
