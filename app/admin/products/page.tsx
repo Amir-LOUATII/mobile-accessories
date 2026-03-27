@@ -158,68 +158,17 @@ export default function AdminProductsPage() {
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-3xl font-bold">
           Gestion des Produits
         </h1>
-        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
-          <div className="flex gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-56">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Rechercher..."
-                className="pl-9 bg-card border-border rounded-xl"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <div className="w-32 sm:w-40">
-              <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="bg-card rounded-xl">
-                  <SelectValue placeholder="Catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Tous">Toutes Catégories</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.name}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-32 sm:w-40">
-              <Select value={sortBy} onValueChange={handleSortChange}>
-                <SelectTrigger className="bg-card rounded-xl">
-                  <SelectValue placeholder="Trier par" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="relevance">Pertinence</SelectItem>
-                  <SelectItem value="price_asc">Prix croissant</SelectItem>
-                  <SelectItem value="price_desc">Prix décroissant</SelectItem>
-                  <SelectItem value="newest">Plus récent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="gap-2 rounded-xl"
-              onClick={fetchProducts}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">Actualiser</span>
+        <div className="flex gap-2">
+          <Link href="/admin/products/add">
+            <Button className="gap-2 rounded-xl w-full sm:w-auto">
+              <Plus className="w-4 h-4" />
+              Ajouter Produit
             </Button>
-            <Link href="/admin/products/add">
-              <Button className="gap-2 rounded-xl w-full sm:w-auto">
-                <Plus className="w-4 h-4" />
-                Ajouter Produit
-              </Button>
-            </Link>
-          </div>
+          </Link>
         </div>
       </div>
 
@@ -232,6 +181,57 @@ export default function AdminProductsPage() {
           ⚠️ {error}
         </div>
       )}
+
+      {/* ── Filters ── */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 sm:max-w-xs">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Rechercher..."
+            className="pl-9 bg-card border-border rounded-xl"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
+        <div className="w-full sm:w-40">
+          <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+            <SelectTrigger className="bg-card rounded-xl">
+              <SelectValue placeholder="Catégorie" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Tous">Toutes Catégories</SelectItem>
+              {categories.map((c) => (
+                <SelectItem key={c.id} value={c.name}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full sm:w-40">
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="bg-card rounded-xl">
+              <SelectValue placeholder="Trier par" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="relevance">Pertinence</SelectItem>
+              <SelectItem value="price_asc">Prix croissant</SelectItem>
+              <SelectItem value="price_desc">Prix décroissant</SelectItem>
+              <SelectItem value="newest">Plus récent</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          variant="outline"
+          className="gap-2 rounded-xl w-full sm:w-auto"
+          onClick={fetchProducts}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">Actualiser</span>
+        </Button>
+      </div>
 
       {/* ── Loading Skeletons ── */}
       {isLoading && (

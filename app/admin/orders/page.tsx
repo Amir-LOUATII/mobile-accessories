@@ -137,49 +137,10 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-3xl font-bold">
           Gestion des Commandes
         </h1>
-        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
-          <div className="flex gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-56">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Chercher (Nom, ID)..."
-                className="pl-9 bg-card border-border rounded-xl"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <div className="w-32 sm:w-40">
-              <Select value={statusFilter} onValueChange={handleStatusChange}>
-                <SelectTrigger className="bg-card rounded-xl">
-                  <SelectValue placeholder="Statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="confirmed">En cours</SelectItem>
-                  <SelectItem value="shipped">Expédié</SelectItem>
-                  <SelectItem value="delivered">Livré</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="gap-2 rounded-xl"
-              onClick={fetchOrders}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">Actualiser</span>
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* ── Stats ── */}
@@ -191,6 +152,43 @@ export default function AdminOrdersPage() {
           ⚠️ {error}
         </div>
       )}
+
+      {/* ── Filters ── */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 sm:max-w-xs">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Chercher (Nom, ID)..."
+            className="pl-9 bg-card border-border rounded-xl"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
+        <div className="w-full sm:w-40">
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="bg-card rounded-xl">
+              <SelectValue placeholder="Statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="confirmed">En cours</SelectItem>
+              <SelectItem value="shipped">Expédié</SelectItem>
+              <SelectItem value="delivered">Livré</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          variant="outline"
+          className="gap-2 rounded-xl w-full sm:w-auto"
+          onClick={fetchOrders}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">Actualiser</span>
+        </Button>
+      </div>
 
       {/* ── Loading Skeletons ── */}
       {isLoading && (

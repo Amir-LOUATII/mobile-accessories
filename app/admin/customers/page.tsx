@@ -137,48 +137,13 @@ export default function AdminCustomersPage() {
         <h1 className="text-2xl sm:text-3xl font-bold">
           Gestion des Clients / Revendeurs
         </h1>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <div className="flex gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-56">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Rechercher..."
-                className="pl-9 bg-card border-border rounded-xl"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <div className="w-32 sm:w-40">
-              <Select value={statusFilter} onValueChange={handleStatusChange}>
-                <SelectTrigger className="bg-card rounded-xl">
-                  <SelectValue placeholder="Statut" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="active">Actif</SelectItem>
-                  <SelectItem value="inactive">Inactif</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="gap-2 rounded-xl"
-              onClick={fetchCustomers}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-              <span className="hidden sm:inline">Actualiser</span>
+        <div className="flex gap-2">
+          <Link href="/admin/customers/add">
+            <Button className="gap-2 rounded-xl w-full sm:w-auto">
+              <Plus className="w-4 h-4" />
+              Ajouter Client
             </Button>
-            <Link href="/admin/customers/add">
-              <Button className="gap-2 rounded-xl w-full sm:w-auto">
-                <Plus className="w-4 h-4" />
-                Ajouter Client
-              </Button>
-            </Link>
-          </div>
+          </Link>
         </div>
       </div>
 
@@ -191,6 +156,41 @@ export default function AdminCustomersPage() {
           ⚠️ {error}
         </div>
       )}
+
+      {/* ── Filters ── */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 sm:max-w-xs">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Rechercher..."
+            className="pl-9 bg-card border-border rounded-xl"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
+        <div className="w-full sm:w-40">
+          <Select value={statusFilter} onValueChange={handleStatusChange}>
+            <SelectTrigger className="bg-card rounded-xl">
+              <SelectValue placeholder="Statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="active">Actif</SelectItem>
+              <SelectItem value="inactive">Inactif</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          variant="outline"
+          className="gap-2 rounded-xl w-full sm:w-auto"
+          onClick={fetchCustomers}
+          disabled={isLoading}
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+          <span className="hidden sm:inline">Actualiser</span>
+        </Button>
+      </div>
 
       {/* ── Loading ── */}
       {isLoading && (

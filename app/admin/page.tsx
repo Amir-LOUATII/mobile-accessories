@@ -6,9 +6,33 @@ import { db } from "@/lib/db";
 import { orders, users, products, orderItems, categories } from "@/lib/db/schema";
 import { sql, eq, desc, gte } from "drizzle-orm";
 import { formatPrice } from "@/lib/utils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis
+} from "@/components/ui/pagination";
 
 // Make the Admin Dashboard a Server Component to fetch DB safely directly
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> | undefined;
+}) {
+  const params = await searchParams;
+  const ordersPageParam = params?.ordersPage;
+  const productsPageParam = params?.productsPage;
+  
+  const currentOrdersPage = typeof ordersPageParam === 'string' ? parseInt(ordersPageParam, 10) : 1;
+  const validOrdersPage = isNaN(currentOrdersPage) || currentOrdersPage < 1 ? 1 : currentOrdersPage;
+  
+  const currentProductsPage = typeof productsPageParam === 'string' ? parseInt(productsPageParam, 10) : 1;
+  const validProductsPage = isNaN(currentProductsPage) || currentProductsPage < 1 ? 1 : currentProductsPage;
+
+  const ITEMS_PER_PAGE = 5;
   // 1. Fetch KPI metrics from database
   const [{ totalOrders }] = await db.select({ totalOrders: sql<number>`count(*)` }).from(orders);
   
@@ -49,7 +73,15 @@ export default async function AdminDashboard() {
     },
   ];
 
-  // 2. Fetch Recent Orders (Last 5)
+  // 2. Fetch Recent Orders (Paginated)
+  const ordersOffset = (validOrdersPage - 1) * ITEMS_PER_PAGE;
+  
+  const [{ count: totalRecentOrdersCount }] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(orders);
+
+  const totalOrdersPages = Math.ceil(Number(totalRecentOrdersCount) / ITEMS_PER_PAGE);
+
   const recentOrdersRaw = await db
     .select({
       id: orders.id,
@@ -60,7 +92,8 @@ export default async function AdminDashboard() {
     .from(orders)
     .innerJoin(users, eq(orders.userId, users.id))
     .orderBy(desc(orders.createdAt))
-    .limit(5);
+    .limit(ITEMS_PER_PAGE)
+    .offset(ordersOffset);
 
   const STATUS_MAP: Record<string, string> = {
     pending: "En attente",
@@ -77,10 +110,21 @@ export default async function AdminDashboard() {
     status: STATUS_MAP[order.status] || order.status, 
   }));
 
-  // 3. Fetch Most Sold Products This Month
+  // 3. Fetch Most Sold Products This Month (Paginated)
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
+
+  const productsOffset = (validProductsPage - 1) * ITEMS_PER_PAGE;
+
+  const [{ count: totalTopProductsCount }] = await db
+    .select({ count: sql<number>`count(distinct ${products.id})` })
+    .from(orderItems)
+    .innerJoin(orders, eq(orderItems.orderId, orders.id))
+    .innerJoin(products, eq(orderItems.productId, products.id))
+    .where(gte(orders.createdAt, startOfMonth));
+
+  const totalProductsPages = Math.ceil(Number(totalTopProductsCount) / ITEMS_PER_PAGE);
 
   const topProductsRaw = await db
     .select({
@@ -99,7 +143,8 @@ export default async function AdminDashboard() {
     .where(gte(orders.createdAt, startOfMonth))
     .groupBy(products.id, categories.name)
     .orderBy(desc(sql`sum(${orderItems.quantity})`))
-    .limit(5);
+    .limit(ITEMS_PER_PAGE)
+    .offset(productsOffset);
 
   const mappedTopProducts = topProductsRaw.map((p) => ({
     id: p.id.toString(),
@@ -119,10 +164,64 @@ export default async function AdminDashboard() {
       <StatsGrid stats={statsCards} />
 
       {/* ── Recent Orders ── */}
-      <RecentOrdersTable orders={mappedRecentOrders} />
+      <div>
+        <RecentOrdersTable orders={mappedRecentOrders} />
+        {totalOrdersPages > 1 && (
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href={`/admin?ordersPage=${validOrdersPage - 1}&productsPage=${validProductsPage}`}
+                    className={validOrdersPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href={`/admin?ordersPage=${validOrdersPage}&productsPage=${validProductsPage}`} isActive>
+                    {validOrdersPage} / {totalOrdersPages}
+                  </PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext 
+                    href={`/admin?ordersPage=${validOrdersPage + 1}&productsPage=${validProductsPage}`}
+                    className={validOrdersPage >= totalOrdersPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
 
       {/* ── Top Products ── */}
-      <TopProductsTable products={mappedTopProducts} />
+      <div>
+        <TopProductsTable products={mappedTopProducts} />
+        {totalProductsPages > 1 && (
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href={`/admin?ordersPage=${validOrdersPage}&productsPage=${validProductsPage - 1}`}
+                    className={validProductsPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href={`/admin?ordersPage=${validOrdersPage}&productsPage=${validProductsPage}`} isActive>
+                    {validProductsPage} / {totalProductsPages}
+                  </PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext 
+                    href={`/admin?ordersPage=${validOrdersPage}&productsPage=${validProductsPage + 1}`}
+                    className={validProductsPage >= totalProductsPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
