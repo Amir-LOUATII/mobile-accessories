@@ -24,6 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
       }`}
     >
       <ProductCardImage
+        productId={product.id}
         image={product.image}
         name={product.name}
         stock={product.stock}

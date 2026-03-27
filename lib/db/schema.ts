@@ -116,6 +116,19 @@ export const products = pgTable('products', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// ─── Favorites ───────────────────────────────────────────────────────────────
+
+export const favorites = pgTable('favorites', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  productId: integer('product_id')
+    .references(() => products.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // ─── Wholesale Prices (tier pricing) ─────────────────────────────────────────
 
 export const wholesalePrices = pgTable('wholesale_prices', {
@@ -160,6 +173,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   orders: many(orders),
+  favorites: many(favorites),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -187,9 +201,21 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   }),
   wholesalePrices: many(wholesalePrices),
   orderItems: many(orderItems),
+  favorites: many(favorites),
 }));
 
-export const wholesalePricesRelations = relations(wholesalePrices, ({ one }) => ({
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+   user: one(users, {
+     fields: [favorites.userId],
+     references: [users.id],
+   }),
+   product: one(products, {
+     fields: [favorites.productId],
+     references: [products.id],
+   }),
+ }));
+
+ export const wholesalePricesRelations = relations(wholesalePrices, ({ one }) => ({
   product: one(products, {
     fields: [wholesalePrices.productId],
     references: [products.id],
@@ -234,3 +260,6 @@ export type NewOrder = typeof orders.$inferInsert;
 
 export type OrderItem = typeof orderItems.$inferSelect;
 export type NewOrderItem = typeof orderItems.$inferInsert;
+
+export type Favorite = typeof favorites.$inferSelect;
+export type NewFavorite = typeof favorites.$inferInsert;

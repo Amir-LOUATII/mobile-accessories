@@ -8,7 +8,7 @@ import { Product } from "@/lib/mock-data";
 
 interface ProductGridProps {
   products: Product[];
-  resetFilters: () => void;
+  resetFilters?: () => void;
 }
 
 export function ProductGrid({ products, resetFilters }: ProductGridProps) {
@@ -23,13 +23,15 @@ export function ProductGrid({ products, resetFilters }: ProductGridProps) {
           Essayez de modifier vos critères de recherche ou de réinitialiser les
           filtres.
         </p>
-        <Button
-          onClick={resetFilters}
-          variant="outline"
-          className="rounded-xl mt-2"
-        >
-          Réinitialiser les filtres
-        </Button>
+        {resetFilters && (
+          <Button
+            onClick={resetFilters}
+            variant="outline"
+            className="rounded-xl mt-2"
+          >
+            Réinitialiser les filtres
+          </Button>
+        )}
       </div>
     );
   }

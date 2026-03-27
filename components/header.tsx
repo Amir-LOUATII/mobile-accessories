@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Menu, X, Smartphone, LogIn, LogOut, User, Shield, Store, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, Menu, X, Smartphone, LogIn, LogOut, User, Shield, Store, ChevronDown, LayoutDashboard, Heart } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
+import { useFavorites } from '@/components/favorites-context';
 import { useState, useRef, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ const ROLE_LABELS: Record<string, { label: string; icon: typeof User; color: str
 
 export function Header() {
   const { itemCount } = useCart();
+  const { favoriteIds } = useFavorites();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { data: session, status } = useSession();
@@ -94,8 +96,23 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Cart, Auth, and Mobile Menu */}
+          {/* Cart, Favorites, Auth, and Mobile Menu */}
           <div className="flex items-center gap-2 md:gap-3">
+            {/* Favorites */}
+            {isLoggedIn && (
+              <Link
+                href="/favorites"
+                className="hidden md:flex relative items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-all duration-200"
+              >
+                <Heart className="w-5 h-5 text-foreground/70 transition-colors" />
+                {favoriteIds.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-md animate-fade-in">
+                    {favoriteIds.length}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {/* Cart — accessible to all */}
             <div className="hidden md:block relative z-50">
               <HoverCard openDelay={0} closeDelay={200}>
@@ -119,7 +136,20 @@ export function Header() {
             </div>
 
             {/* Mobile (Fallback without hover card) */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center gap-1">
+              {isLoggedIn && (
+                <Link
+                  href="/favorites"
+                  className="relative flex items-center px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-all duration-200"
+                >
+                  <Heart className="w-5 h-5 text-foreground/70 transition-colors" />
+                  {favoriteIds.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-md animate-fade-in">
+                      {favoriteIds.length}
+                    </span>
+                  )}
+                </Link>
+              )}
               <Link
                 href="/cart"
                 className="relative flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-all duration-200"

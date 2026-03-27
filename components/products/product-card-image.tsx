@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import { FALLBACK_IMAGE } from "@/lib/mock-data";
+import { FavoriteButton } from "@/components/products/favorite-button";
 
 interface ProductCardImageProps {
+  productId: string;
   image: string;
   name: string;
   stock: number;
@@ -13,6 +15,7 @@ interface ProductCardImageProps {
 }
 
 export function ProductCardImage({
+  productId,
   image,
   name,
   stock,
@@ -45,6 +48,11 @@ export function ProductCardImage({
           {badge}
         </div>
       )}
+
+      {/* Favorite Button */}
+      <div className="absolute top-3 right-3 z-10 hidden group-hover:block transition-all duration-300">
+        <FavoriteButton productId={productId} />
+      </div>
 
       {/* Out of Stock Overlay */}
       {stock === 0 && (
