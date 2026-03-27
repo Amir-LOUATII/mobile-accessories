@@ -1,22 +1,28 @@
 interface Order {
+  rawId?: number;
   id: string;
   customer: string;
   amount: number;
   status: string;
 }
 
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
+
 interface RecentOrdersTableProps {
   orders: Order[];
 }
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Livré":
+  switch (status.toLowerCase()) {
+    case "livré":
       return "bg-green-100 text-green-800";
-    case "Expédié":
+    case "expédié":
       return "bg-blue-100 text-blue-800";
-    case "En cours":
+    case "en cours":
       return "bg-yellow-100 text-yellow-800";
+    case "en attente":
+      return "bg-orange-100 text-orange-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -47,6 +53,14 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
                 ${order.amount.toLocaleString()}
               </span>
             </div>
+            <div className="pt-2 flex justify-end">
+              <Link 
+                href={`/admin/orders/${order.rawId || order.id}`}
+                className="text-xs font-medium text-primary flex items-center hover:underline"
+              >
+                Voir détails <ChevronRight className="w-3 h-3 ml-0.5" />
+              </Link>
+            </div>
           </div>
         ))}
       </div>
@@ -67,6 +81,9 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
               </th>
               <th className="text-left px-4 md:px-6 py-3 font-semibold text-sm">
                 Statut
+              </th>
+              <th className="text-right px-4 md:px-6 py-3 font-semibold text-sm">
+                Action
               </th>
             </tr>
           </thead>
@@ -89,6 +106,14 @@ export function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
                   >
                     {order.status}
                   </span>
+                </td>
+                <td className="px-4 md:px-6 py-4 text-right">
+                  <Link 
+                    href={`/admin/orders/${order.rawId || order.id}`}
+                    className="text-sm font-medium text-primary hover:underline flex items-center justify-end"
+                  >
+                    Détails <ChevronRight className="w-4 h-4 ml-1" />
+                  </Link>
                 </td>
               </tr>
             ))}
